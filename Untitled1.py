@@ -37,10 +37,12 @@ def sec_plot(dfm):
 # In[4]:
 
 
+hdf= h5py.File(r'E:\baskar\data_set_microst\bikhodi.h5','w')
+
 data=h5py.File(r'E:\baskar\data_set_microst\data_chi_3.400_phi_0.500.h5','r')
 keys_list=list(data.keys())
 sec_loc=np.linspace(0.0,4.0,257)
-for timestep in range(1):  #use:range(len(keys_list)) for full data
+for timestep in range(2):  #use:range(len(keys_list)) for full data
     dset=data[keys_list[timestep]] #keys_list shape is (83,)
     # list(dset.items())
     # connectivity=np.array(dset.get("elem_connectivity"))  # 8388608 (256*256*128) element with 8 nodes each
@@ -56,16 +58,17 @@ for timestep in range(1):  #use:range(len(keys_list)) for full data
 
     # sec_plot(sectioning()[0][sec_loc[50]])  #sec_plot(sectioning()[0:X-dir|1:Y-dir][location]
 
-    with h5py.File(r'E:\baskar\data_set_microst\bikhodi.h5','w') as hdf:
-        G1=hdf.create_group('G_/'+keys_list[timestep])
-        tmp0=sectioning()[0]
-        tmp1=tmp0.to_numpy()
-        tmp2=sectioning()[1]
-        tmp3=tmp2.to_numpy()
-        for j in range(len(sec_loc)):
-            G1.create_dataset('s_X_'+str(sec_loc[j]),data=tmp1[j])
-            G1.create_dataset('s_Y_'+str(sec_loc[j]),data=tmp3[j])
+#     with h5py.File(r'E:\baskar\data_set_microst\bikhodi.h5','w') as hdf:
+    G1=hdf.create_group('G_/'+keys_list[timestep])
+    tmp0=sectioning()[0]
+    tmp1=tmp0.to_numpy()
+    tmp2=sectioning()[1]
+    tmp3=tmp2.to_numpy()
+    for j in range(len(sec_loc)):
+        G1.create_dataset('s_X_'+str(sec_loc[j]),data=tmp1[j])
+        G1.create_dataset('s_Y_'+str(sec_loc[j]),data=tmp3[j])
 data.close()
+hdf.close()
 
 
 # In[5]:
