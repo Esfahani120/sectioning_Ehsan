@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[11]:
+
+
+get_ipython().run_line_magic('reset', '')
+
+
+# In[12]:
 
 
 import h5py  #watch:   https://www.pythonforthelab.com/blog/how-to-use-hdf5-files-in-python/
@@ -11,7 +17,7 @@ import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[2]:
+# In[13]:
 
 
 def sectioning(df0):
@@ -34,7 +40,7 @@ def sec_plot(dfm):
     return
 
 
-# In[3]:
+# In[14]:
 
 
 hdf= h5py.File(r'E:\baskar\data_set_microst\bikhodi.h5','w')
@@ -50,12 +56,13 @@ patch_2 = (patch[0]+128).flatten()
 
 
 
-for timestep in range(82,83):  #use:range(len(keys_list)) for full data
+for timestep in range(81,83):  #use:range(len(keys_list)) for full data
     
 
     saving_frames = np.zeros((257*4, 129*129))
     
     dset=data[keys_list[timestep]] #keys_list shape is (83,)
+#     list(dset[keys_list[timestep]]) # it will give the member names
     # connectivity=np.array(dset.get("elem_connectivity"))  # 8388608 (256*256*128) element with 8 nodes each
     ncoord=np.array(dset.get('node_coords')) # 8520321 (257*257*129) nodes with 3 (xyz) (4*4*2)
     phi_values=np.array(dset.get('node_data').get('phi')) # 8520321 values for phi
@@ -73,7 +80,6 @@ for timestep in range(82,83):  #use:range(len(keys_list)) for full data
 
     # sec_plot(sectioning()[0][sec_loc[50]])  #sec_plot(sectioning()[0:X-dir|1:Y-dir][location]
 
-    G1=hdf.create_group('G_/'+keys_list[timestep])
 
     for j, i in enumerate(range(0, 257*4, 4)):
         saving_frames[i] = bbb_x[sec_loc[j]][:,3][patch_1]
@@ -81,30 +87,34 @@ for timestep in range(82,83):  #use:range(len(keys_list)) for full data
         saving_frames[i+2] = bbb_y[sec_loc[j]][:,3][patch_1]    
         saving_frames[i+3] = bbb_y[sec_loc[j]][:,3][patch_2]  
     
-    G1.create_dataset(str(timestep), data=saving_frames)
+    hdf.create_dataset(str(timestep), data=saving_frames)
 
 data.close()
 hdf.close()
 
 
-# In[4]:
+# In[15]:
 
 
 sec_plot(sectioning(df)[0][sec_loc[100]])  #sec_plot(sectioning()[0:X-dir|1:Y-dir][location]
 hdf.close()
 
 
-# In[5]:
+# In[16]:
 
 
-plt.imshow(saving_frames[200].reshape(129,129), extent=[0, 2, 0, 2], origin='lower', cmap='jet')
+plt.imshow(saving_frames[1024].reshape(129,129), extent=[0, 2, 0, 2], origin='lower', cmap='jet')
 plt.show()
 
 
-# In[ ]:
+# In[18]:
 
 
-
+test_dset = h5py.File(r'E:\baskar\data_set_microst\bikhodi.h5','r')
+e_keys = list(test_dset.keys())
+e0 = np.array(test_dset[e_keys[0]])
+print(e0.shape)
+test_dset.close()
 
 
 # In[ ]:
