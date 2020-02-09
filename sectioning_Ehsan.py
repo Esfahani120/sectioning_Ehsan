@@ -25,8 +25,8 @@ morphologies which obtained by solving the Cahn-Hilliard equation.
 
 """
 
-
 import os
+from tqdm import tqdm
 import h5py  
 import numpy as np
 import pandas as pd
@@ -94,11 +94,11 @@ patch_2 = patch_1 + height - 1
 
 """ Iterating over names of the files (*.h5) in the reading_directory
 """ 
+writing_data = h5py.File(writing_directory + 'sliced_dataset.h5', 'w')
 k = 1
 for names in name_files:
 
-    writing_data = h5py.File(writing_directory + 'sliced_' + names, 'w')
-
+    writing_group = writing_data.create_group('file_'+str(k-1))
     reading_data = h5py.File(reading_directory + names, 'r')
     
     keys_list = list(reading_data.keys())
@@ -106,7 +106,7 @@ for names in name_files:
 
     """ Iterating over the time_interval defined by the user
     """
-    for timestep in time_interval: 
+    for timestep in tqdm(time_interval): 
 
         saving_frames = np.zeros((numb_sections*4, height*height))
         
@@ -151,13 +151,13 @@ for names in name_files:
             129x129 size images. saving_frames size is: 
             (numb_sections*4, height*height)
         """
-        writing_data.create_dataset(str(timestep), data=saving_frames)
-    print('Prepared files: {:02.1f}%'.format((k/len(name_files))*100))
+        writing_group.create_dataset(str(timestep), data=saving_frames)
+    print('Slicing files: {} out of {} ---> Done'.format(k, len(name_files)))
     k += 1
          
 
     reading_data.close()
-    writing_data.close()
+writing_data.close()
 
 """ Visualization
     * Since we solve the CH equation on a 257x257x129 grid in 3-D pixel domain, 
