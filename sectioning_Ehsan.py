@@ -1,7 +1,4 @@
 """
-Created on Sat Feb  8 14:31:20 2020
-
-@author: Iowa State University 
 """
 
 """ Binary images (129x129 pixels) of the microstructures sliced from 3-D 
@@ -22,39 +19,41 @@ morphologies which obtained by solving the Cahn-Hilliard equation.
  (1961), pp. 795-801.
  [2] For reading more about h5 files, see:   
      https://www.pythonforthelab.com/blog/how-to-use-hdf5-files-in-python/
+@author: Iowa State University 
 
 """
 
 import os
-from tqdm import tqdm
+
 import h5py
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 """ Slicing core function 
-   * This function takes a pandas.core.frame.DataFrame type dataframe (df0)
+   * This function takes a pandas.core.frame.DataFrame type data frame (base_data_frame)
      and return two pandas.core.series.Series type series. 
-   * df0 contains node coordinates and phi values (approximately for each 
-     morphology or timestep, df0.shape = (8520321, 4))
+   * base_data_frame contains node coordinates and phi values (approximately for each 
+     morphology or timestep, base_data_frame.shape = (8520321, 4))
 """
 
 
-def slicing(df0):
-    """grouping the data frame (df0) by X values"""
-    df_sec_X = df0.groupby('X').apply(pd.DataFrame.to_numpy)
+def slicing(base_data_frame):
+    """grouping the data frame (base_data_frame) by X values"""
+    data_frame_sec_X = base_data_frame.groupby('X').apply(pd.DataFrame.to_numpy)
 
-    """grouping the data frame (df0) by Y values"""
-    df_sec_Y = df0.groupby('Y').apply(pd.DataFrame.to_numpy)
+    """grouping the data frame (base_data_frame) by Y values"""
+    data_frame_sec_Y = base_data_frame.groupby('Y').apply(pd.DataFrame.to_numpy)
 
-    return df_sec_X, df_sec_Y
+    return data_frame_sec_X, data_frame_sec_Y
 
 
 """ Setting directory, and reading names of the files:
-    * Note: to avoide any unpredicted errors, please make two seprate 
+    * Note: to avoid any unpredicted errors, please make two separate 
       directories for reading and writing.
 """
-reading_directory = './reading/'
+reading_directory = './all_data/'
 writing_directory = './writing/'
 
 name_files = os.listdir(path=reading_directory)
@@ -84,12 +83,12 @@ patch_2 = patch_1 + height - 1
 
 """ Reading, slicing, and saving the dataset 
     * time_interval : this is a numpy array used to define the time interval 
-      that we want to extract the infromation from the solution which is saved 
+      that we want to extract the information from the solution which is saved 
       in the dataset. Note that we start from time step number 5 because 
-      solutions at the very begining of the dataset is affected by the initial 
+      solutions at the very beginning of the dataset is affected by the initial 
       states introduced to the system, and the width of interfaces are pretty 
       large.
-    * df : this is a pandas dataframe which includes (X, Y, Z, phi) features
+    * data_frame : this is a pandas data frame which includes (X, Y, Z, phi) features
     * saving_frames : this is numpy array in which we save phi values of all 
       the slices we created.
 """
@@ -115,28 +114,28 @@ for names in name_files:
         """ Reading the data set related to the current 
             timestep in the loop
         """
-        dset = reading_data[keys_list[timestep]]
+        data_set = reading_data[keys_list[timestep]]
 
         """ Extracting 8520321 (257x257x129) nodes with 3 
-            (xyz) coordinates from the read_dset 
+            (xyz) coordinates from the read_data_set 
         """
-        ncoord = np.array(dset.get('node_coords'))
+        n_coord = np.array(data_set.get('node_coords'))
 
         """ Extracting values of phi on 8520321 (257x257x129) nodes
         """
-        phi_values = np.array(dset.get('node_data').get('phi'))
+        phi_values = np.array(data_set.get('node_data').get('phi'))
 
-        """ Concatenation of ncoord and phi_values in a pandas 
+        """ Concatenation of n_coord and phi_values in a pandas 
             dataframe and name the columns properly
         """
-        df = pd.concat([pd.DataFrame(ncoord, columns=['X', 'Y', 'Z']),
-                        pd.DataFrame(phi_values, columns=['phi'])],
-                       axis=1, sort=False)
+        data_frame = pd.concat([pd.DataFrame(n_coord, columns=['X', 'Y', 'Z']),
+                                pd.DataFrame(phi_values, columns=['phi'])],
+                               axis=1, sort=False)
 
         """ Calling slicing function to groupby the dataset 
             based on the X and Y coordinates 
         """
-        data_sliced = slicing(df)
+        data_sliced = slicing(data_frame)
         slices_x = data_sliced[0]
         slices_y = data_sliced[1]
 
@@ -160,19 +159,18 @@ for names in name_files:
     reading_data.close()
 writing_data.close()
 
-""" Visualization
-    * Since we solve the CH equation on a 257x257x129 grid in 3-D pixel domain, 
-      every image obtained after slicing and patching is 129x129 pixels in 
-      resolution. Each image is grayscale, with the value of each pixel ranging 
-      between 0 to 1. Here four 2-D morphologies are being visualized. 
-"""
 
-fig, axes = plt.subplots(2, 2)
-k = 0
-for i in range(2):
-    for j in range(2):
-        axes[i, j].imshow(saving_frames[k].reshape(129, 129), extent=[0, 2, 0, 2], origin='lower', cmap='jet')
-        axes[i, j].set_title("patch_" + str(j + 1))
-        axes[i, j].axis('off')
-        k += 1
-plt.show()
+def visualize_frame(dataframe):
+    """ Visualization
+        * Since we solve the CH equation on a 257x257x129 grid in 3-D pixel domain,
+          every image obtained after slicing and patching is 129x129 pixels in
+          resolution. Each image is grayscale, with the value of each pixel ranging
+          between 0 to 1. Here four 2-D morphologies are being visualized.
+    """
+    fig, axes = plt.subplots(2, 2)
+    for i in range(2):
+        for j in range(2):
+            axes[i, j].imshow(dataframe.reshape(129, 129), extent=[0, 2, 0, 2], origin='lower', cmap='jet')
+            axes[i, j].set_title("patch_" + str(j + 1))
+            axes[i, j].axis('off')
+    plt.show()
