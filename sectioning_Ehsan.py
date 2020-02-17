@@ -1,7 +1,4 @@
-"""
-"""
-
-""" Binary images (129x129 pixels) of the microstructures sliced from 3-D 
+""" Binary images (129x129 pixels) of the microstructures sliced from 3-D
 morphologies which obtained by solving the Cahn-Hilliard equation.
  * We generate the CH dataset of 3-D microstructure using a thermodynamic 
    consistent binary phase separation simulation. This is done by solving 
@@ -20,7 +17,6 @@ morphologies which obtained by solving the Cahn-Hilliard equation.
  [2] For reading more about h5 files, see:   
      https://www.pythonforthelab.com/blog/how-to-use-hdf5-files-in-python/
 @author: Iowa State University 
-
 """
 
 import os
@@ -93,8 +89,7 @@ patch_2 = patch_1 + height - 1
       the slices we created.
 """
 
-""" Iterating over names of the files (*.h5) in the reading_directory
-"""
+# Iterating over names of the files (*.h5) in the reading_directory
 writing_data = h5py.File(writing_directory + 'sliced_dataset.h5', 'w')
 k = 1
 for names in name_files:
@@ -105,53 +100,40 @@ for names in name_files:
     keys_list = list(reading_data.keys())
     time_interval = np.arange(8, len(keys_list), 2)
 
-    """ Iterating over the time_interval defined by the user
-    """
+    # Iterating over the time_interval defined by the user
     for timestep in tqdm(time_interval):
 
         saving_frames = np.zeros((numb_sections * 4, height * height))
 
-        """ Reading the data set related to the current 
-            timestep in the loop
-        """
+        # Reading the data set related to the current timestep in the loop
         data_set = reading_data[keys_list[timestep]]
 
-        """ Extracting 8520321 (257x257x129) nodes with 3 
-            (xyz) coordinates from the read_data_set 
-        """
+        # Extracting 8520321 (257x257x129) nodes with 3 (xyz) coordinates from the read_data_set
         n_coord = np.array(data_set.get('node_coords'))
 
-        """ Extracting values of phi on 8520321 (257x257x129) nodes
-        """
+        # Extracting values of phi on 8520321 (257x257x129) nodes
         phi_values = np.array(data_set.get('node_data').get('phi'))
 
-        """ Concatenation of n_coord and phi_values in a pandas 
-            dataframe and name the columns properly
-        """
+        # Concatenation of n_coord and phi_values in a pandas dataframe and name the columns properly
         data_frame = pd.concat([pd.DataFrame(n_coord, columns=['X', 'Y', 'Z']),
                                 pd.DataFrame(phi_values, columns=['phi'])],
                                axis=1, sort=False)
 
-        """ Calling slicing function to groupby the dataset 
-            based on the X and Y coordinates 
-        """
+        # Calling slicing function to groupby the dataset based on the X and Y coordinates
         data_sliced = slicing(data_frame)
         slices_x = data_sliced[0]
         slices_y = data_sliced[1]
 
-        """ Dividing the images obtained from the slicing functions 
-            in half by using indices saved in patch_1 and patch_2 arrays 
-        """
+        # Dividing the images obtained from the slicing functions in half by using indices saved in patch_1 and
+        # patch_2 arrays
         for j, i in enumerate(range(0, numb_sections * 4, 4)):
             saving_frames[i] = slices_x[sec_loc[j]][:, 3][patch_1]
             saving_frames[i + 1] = slices_x[sec_loc[j]][:, 3][patch_2]
             saving_frames[i + 2] = slices_y[sec_loc[j]][:, 3][patch_1]
             saving_frames[i + 3] = slices_y[sec_loc[j]][:, 3][patch_2]
 
-        """ Saving the saving_frames in which one can find all the desired
-            129x129 size images. saving_frames size is: 
-            (num_sections*4, height*height)
-        """
+        # Saving the saving_frames in which one can find all the desired 129x129 size images. saving_frames size is:
+        # (num_sections*4, height*height)
         writing_group.create_dataset(str(timestep), data=saving_frames)
     print('Slicing files: {} out of {} ---> Done'.format(k, len(name_files)))
     k += 1
@@ -162,10 +144,10 @@ writing_data.close()
 
 def visualize_frame(dataframe):
     """ Visualization
-        * Since we solve the CH equation on a 257x257x129 grid in 3-D pixel domain,
-          every image obtained after slicing and patching is 129x129 pixels in
-          resolution. Each image is grayscale, with the value of each pixel ranging
-          between 0 to 1. Here four 2-D morphologies are being visualized.
+        Since we solve the CH equation on a 257x257x129 grid in 3-D pixel domain,
+        every image obtained after slicing and patching is 129x129 pixels in
+        resolution. Each image is grayscale, with the value of each pixel ranging
+        between 0 to 1. Here four 2-D morphologies are being visualized.
     """
     fig, axes = plt.subplots(2, 2)
     for i in range(2):
